@@ -1,0 +1,459 @@
+---
+title: "Tercer Parcial Modelaje"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+  prettydoc::html_pretty: 
+    theme: cayman 
+    hightlight: github
+    toc: true
+---
+
+# Estimar el $R_0$
+
+## Conceptos básicos
+
+El $R_0$ es un concepto de epidemiología, tiene una interpretación asociada, es el **número reproductivo básico**, lo que significa es que dado un individuo infectado, cuántos individuos en promedio puede infectar. 
+
+El hecho de que tenga el subíndice *0*, significa que esto ocurre si no hubiera intervenciones (farmacológico, vacunación, aislamiento, cuarentena) entonces así es como se comportaría la enfermedad, libremente. Al incio de la epidemia, es así como se comporta. El $R_0$ es al incio de la epidemia y sin medidas de control. 
+
+Algunas medidas de control son como aislamiento, cuarntena, farmacológica, vacunación. Cuando estas intervienen en la dinámica de la enfermedad, se modifica dicha dinámica. Eñ $R_0$ es natural del patógeno/cepa. Hay cosas que dependen del $R_0$ y otras que no. 
+
+En el modelo **SIS**, el $R_0$ es $\frac{\beta}{\gamma}$. Algunas medidas de control como el aislamiento y cuarentena afectan al parámetro $\beta$. Las vacunas impactan en $\beta$ y las medidas farmacológicas al $\gamma$. 
+
+El $R_0$ solo se establece cuando no existen medidas de control. Las medidas impactan en los parámetros que definen al $R_0$. Ya sea que reducen el número de suceptibles o de los infectados, alguno de los dos compartimentos. 
+
+Por ejemplo, con las vacunas, pueden hacer que la transmisión sea menos efectiva, o incluso cortar la cadena de transimisión, que haga la $\beta = 0$ o $\beta \approx 0$, aunque no sean 100% efectivas, tienen un rango donde reducen la $\beta$ y por ende, el $R_0$. 
+
+* Inmunidad de rebaño: $1 - \frac{1}{R_0}$
+
+Las medidas de control, tratan de reducir el valor de $R_0$. Ya que se sabe que si $R_0 < 1$ el punto de equilibrio estable es el free-disease, en cambio, para un $R_0 > 1$, el punto de equilibrio estable es el endémico. Con un $R_0 > 1$ y sin medidas de control, nos vemos al punto endémico. La idea es implementar las medidas de control para empujar al sistema al otro punto de equilibrio, por distintos métodos. 
+
+Ténicamente, el $R_0$ solo se usa al inicio de la enfermedad y sin medidas de control. Cuando se implementan medidas de control, de habla de un $R_t$, que tiene que ver con el número reroductivo básico de la enfermedad al tiempo **t**. Con las medidas de control se pretende que el $R_t < R_0$ y además que sea menor que 1, para que sea efectivo. 
+
+Podemos calcular el $R_t$ de distintos lugares asociados a las medidas de control. El $R_0$ es asociado a la variante, y es general. El $R_t$ puede ser distinto en distintos lados, y se puede calcular a partir de los datos. 
+
+Los pasos son:
+
+1. Estimar el $R_0$
+2. Medidas de control
+3. Obtener datos
+4. Estimar el $R_t$
+
+Escencialmente, es una bifurcación dependiente del $R_t$, cambiando los parámetros.  
+
+## Estimación
+
+Basado en el modelo **SIS** sin demografía
+
+![Modelo SIS](cap_19.png)
+
+Se asume que la fración de la población total es 1 y la población se conserva. Los suceptibles varian con respecto al tiempo, los infectados varían con respecto al tiempo, pero la suma se conserva. Son los mismos individuos.
+
+$$ 1 = S +  I $$
+
+Las ecuaciones del modelo son: 
+
+$$\begin{array}{l}
+\dot S = - \beta SI + \gamma I \\
+\dot I = \beta SI - \gamma I
+\end{array}$$
+
+Con este sistema, se puede reducir a una sola dimensión. Podemos escoger una ecuación para expresar una variable en términos de la otra.
+
+$$\dot I = \beta (1-I)I - \gamma I$$
+
+Considerando que se está estimado el $R_0$ al inicio de la epidemia, y que hay muy pocos infectados, se puede decir que: $I \approx 0$. Lo que significa que, la cantidad de infectados es muy muy pequeña, comparando un caso contra la población de un país, **AL INICIO**. Comparado con la fracción total de la población, $1 \gg I$, lo que significa que $1-I \approx 1$. Por ejemplo, en México, si solo hubiera un solo infectado, $I = \frac{1}{127,000,000} = 1*10^{-8}$. Como esto ocurre al incio, no quiere decir que sean válidad siempre. Eso sifgnifica que podemos reescribir: 
+
+$$\begin{array}{l}
+\dot I \approx \beta (1)I - \gamma I \\
+\dot I \approx \beta I - \gamma I \\
+\dot I \approx I ( \beta - \gamma)
+\end{array}$$
+
+Entonces, al incio, esta es la dinámica. Como $(\beta - \gamma)$ es unca constante, la solución de esta ecuación diferencial es: 
+
+$$I(t) = I_0 e^{(\beta - \gamma) t}$$
+
+Esta exponencial puede tener tres comportamientos, dependiendo del valor de los parámetros, dado un número de $I_0$ : 
+
++ **Crecimiento exponencial** Si la constante de la exponencial es positiva, es decir, si $\beta - \gamma > 0$, es decir, si la tasa de infección es mayor a la tasa de recuperación, hay más personas infectadas.  (Azul)
++ **Constante** Si la constante de la exponencial es igual a 0, es decir, si $\beta - \gamma = 0$, es decir, si la tasa de infección es igual a la tasa de recuperación, el número de personas infectadas no cambia.(Naranja)
++ **Decrecimiento exponencial** Si la constante de la exponencial es negativa, es decir, si $\beta - \gamma < 1$, es decir, si la tasa de infección es menor a la tasa de recuperación, se reduce el número de personas infectadas. (Morado)
+
+![Exponencial](cap_20.png)
+
+La condición: 
+$$\begin{array}{l}
+\beta - \gamma > 0 \\
+\beta > \gamma \\ 
+\frac{\beta}{\gamma} > 1 \\
+\\
+\text{Para el modelo, el } R_0 \text{ es:}
+\frac{\beta}{\gamma}
+\\
+R_0 > 1 \\
+\end{array}$$
+
+Qué tan rápido va a crecer?? Dependerá del valor de la diferencia de $\beta - \gamma$. 
+
+Esta es la justificaicón por la cual, las epidemias al inicio, se comportan de manera exponencial, cuando el $R_0 > 1$.
+<p>&nbsp;</p>
+
+Una vez con los datos, al incio, se observaría, dado un número de infectados y antes de que se tomen medidas de control, se tendría que observar un crecimiento exponecial. 
+
+![Exponencial](cap_21.png)
+
+Los datos, los casos, deberían ajustarse más o menos, a una forma exponencial, $I(t) = I_0 e^{(\beta - \gamma) t}$. Una vez se toman medidas de control o con inmunidad adquirida, el número de infectados deja de ser exponencial, llega a un pico y luego disminuye. Pero al inicio es donde se puede estimar el $R_0$. 
+
+Podemos escribir 
+$$I(t) = I_0 e^{(\beta - \gamma) t}$$ 
+
+Y sabemos que 
+$$R_0 = \frac{\beta}{\gamma}$$
+
+Al despejar $\beta$ nos queda
+$$\beta = R_0 \gamma$$
+
+Entonces, se puede reescribir, para involucrar en la constante al $R_0$
+$$I(t) = I_0 e^{(R_0 \gamma - \gamma) t} \\
+= I(t) = I_0 e^{\gamma(R_0 - 1)t}$$ 
+
+Con esta ultima expresión, es más claro. Cuando se comporta como una exponencial creciente, $R_0 > 1$. 
+<p>&nbsp;</p>
+
+Entonces, si se tienen los datos, y al inicio, se comportan de manera exponencial, para calcular el $R_0$, se tiene que los casos están dados por $I(t)$, y si se convierte a expresiones logarítimicas, se obtiene que: 
+$$I(t) = log (I_0) + \gamma(R_0 - 1)t$$
+Teniendo a $log (I_0)$ como una constante: B, **+** la constante m, por t:
+$$I=B+mt$$
+Se obtiene al ecuación de la recta. Cuando se transforman los datos de manera logarítmicca, se obtiene una recta, y la pendiente ayuda a estimar el valor de $R_0$. 
+
+Un análisis que es útil para estimar definitivamente el valor de $R_0$ es una regresión lineal, para poder inferir los parámetros la línea recta e inferir directamente el $R_0$.
+
+El momento en que se hace el corte para el cálulo, es cuando la pendiente cambia, ya que esta aproximación del $R_0$ es al incio, bajo el supuesto de que el número de individuos infectados es pequeño y no hay medidas de control. No hay un criterio de oro en el cuál se haga el corte de los datos, va a haber un momento cuando ya no crezca de forma exponencial. Se deberían probar distintos ajustes en distintos intervalos de datos, el valor de $R^2$ de la regresión, nos indica qué tanto se ajustan los datos a la exponencial, y detectar en qué momento ya no es exponencial.  
+<p>&nbsp;</p>
+
+# Uso de Tidyverse
+
+La libreria *Tidyverse* es un escosistema para trabajar con datos. 
+
+```{r warning = F, message=F}
+library(tidyverse)
+``` 
+
+Para trabajar con esta librería, se usan los datos de anotación del [genoma de E.coli](https://www.ncbi.nlm.nih.gov/genome/browse/#!/proteins/167/161521%7CEscherichia%20coli%20str.%20K-12%20substr.%20MG1655/)
+
+```{r}
+annotation_e_coli_k_12 <- read.csv("proteins_167_161521.csv")
+head(annotation_e_coli_k_12)
+glimpse(annotation_e_coli_k_12)
+```
+
+```
+annotation_e_coli_k_12 <- read_csv("proteins_167_161521.csv")
+```
+
+Con la función ```read_csv``` da más información. \
+La función ```glimpse()``` es como darle un vistazo rápido al objeto de la base de datos. Sirve para tablas de datos muy grandes. Da igual información de la abse de datos. 
+
+## Verbos
+
+### Filter
+
+Se filtran renglones que cumplan una cierta condición. Las condicones pueden ser complejas para filtrar los renglones que cumplan esas condicones.
+
+Por ejemplo, podemos filtrar la base de datos para obtener solamente los genomas de cadena positiva de la base de datos. 
+
+```{r}
+positivos <- filter(annotation_e_coli_k_12, Strand == "+")
+glimpse(annotation_e_coli_k_12)
+head(positivos)
+```
+
+Por ejemplo, para filtrar a las proteínas entre 50 y 75 aminoácidos
+
+```{r}
+head(filter(annotation_e_coli_k_12, Length >= 50 & Length <= 75))
+```
+
+1. ¿Cuántas proteínas están en la cadena negativa y son mayores a 100 aa?
+```{r}
+nega_100 <- filter(annotation_e_coli_k_12, Strand == "-" & Length < 100)
+glimpse(nega_100)
+```
+
+2. Existen proteínas con tamaño EXACTAMENTE de 100 aa en la cadena negativa? Si es así, especifica su nombre
+```{r}
+exac100 <- filter(annotation_e_coli_k_12, Strand == "-" & Length == 100)
+exac100["Accession"]
+```
+
+3. ¿Cuántas proteínas son mayores a la longitud promedio y cuántas están en la cadena positiva y cuántas en la negativa?
+```{r}
+positivos <- filter(annotation_e_coli_k_12, Strand == "+" & Length>mean(Length))
+negativos <- filter(annotation_e_coli_k_12, Strand == "-" & Length>mean(Length))
+
+glimpse(positivos)
+glimpse(negativos)
+```
+
+### Seleccionar 
+
+Permite seleccionar columnas 
+
+```{r}
+head(select(annotation_e_coli_k_12, Strand))
+```
+
+Puedo seleccionar más de una columna, con una notación tipo vector
+
+```{r}
+head(select(annotation_e_coli_k_12, c(Accession, Strand)))
+```
+
+Se pueden quitar columnas específicas, por ejemplo, si de las 11 columnas queremos quitar una, es decir, deja todas las columnas excepto tal.
+
+```{r}
+head(select(annotation_e_coli_k_12 ,-Strand))
+```
+
+También se pueden seleccionar columnas que cumplan con un cierto patrón. No es sensible a mayúsculas y minúsculas.
+
+```{r}
+head(select(annotation_e_coli_k_12, starts_with("S")))
+head(select(annotation_e_coli_k_12, contains("x")))
+head(select(annotation_e_coli_k_12, ends_with("h")))
+```
+
+1. Seleecionar todas las columnas de tipo chr y todas las de tipo dbl 
+
+```{r}
+glimpse(annotation_e_coli_k_12 %>% select(is.double, is.character))
+```
+
+2. Quitar todas las columnas con el nombre del gen y/o proteína
+
+```{r}
+head(annotation_e_coli_k_12 %>% select( - is.character))
+```
+
+3. Dejar una tabla con su nombre preferido del gen o proteína y que sólo contenga esa información, más el strand y el tamaño.
+
+```{r}
+head(select(annotation_e_coli_k_12, c(Accession, Strand, Length)))
+```
+
+### Ordenar
+
+Se usa la función arrange()
+
+Puede ordenar, de acuerdo a las columnas. 
+
+```{r}
+head(arrange(annotation_e_coli_k_12, Length))
+head(arrange(annotation_e_coli_k_12, Accession))
+head(arrange(annotation_e_coli_k_12, Start))
+```
+
+### Crear nuevas variables
+
+Por ejemplo, obtener el tamaño del gen, no de la proteína, restanto el Stop menos el Start.
+
+Se usa la función mutate()
+
+```{r}
+tam_n <- mutate(annotation_e_coli_k_12, tamano_nucleotidos = Stop - Start)
+head(mutate(tam_n, Bigger_than_nc_mean=ifelse(tamano_nucleotidos>mean(tamano_nucleotidos),T,F)))
+```
+
+# Datos de COVID
+
+Se hizo la tarea con los datos de COVID
+
+# Modelo de dos cepas
+
++ Hay dos cepas circulantes de una enfermedad
++ Se describe un modelo SIR
++ Hay inmunidad cruzada completa
+
+Para este modelo se considera: 
+
+- una tasa de infección asociada a la cepa
+- una tasa de mortalidad asociada a la infección
+- la tasa de recuperación depende de la cepa
+
+## Esquema de compartimentos
+
+![Diagrama](cap_22.png)
+
+## Ecuaciones 
+
+$$\begin{array}{l}
+\dot S = \nu - \beta_1 S I_1 - \beta_2 S I_2 - \mu S \\
+\dot I_1 = \beta_1 S I_1 - \gamma_1 I_1 - (\mu + \delta_1) I_1 \\
+\dot I_2 = \beta_2 S I_2 - \gamma_2 I_2 - (\mu + \delta_2) I_2 \\
+\dot R = \gamma_1 I_1 + \gamma_2 I_2 - \mu R
+\end{array}$$
+
+## Parámetros
+
+- $\nu$ : tasa de nacimientos
+- $\beta_1$ : tasa de infección de la cepa 1
+- $\beta_2$ : tasa de infección de la cepa 2
+- $\mu$ : tasa de mortalidad poblacional
+- $\delta_1$ : tasa de mortalidad asociada a la infección de la cepa 1
+- $\delta_2$ : tasa de mortalidad asociada a la infección de la cepa 2
+- $\gamma_1$ : tasa de recuperación de la cepa 1
+- $\gamma_2$ : tasa de recuperación de la cepa 2
+
+## Describir el $R_0$
+
+$$R_0 = \frac{\beta_1}{\gamma_1 + (\mu + \delta_1)} + 
+\frac{\beta_2}{\gamma_2 + (\mu + \delta_2)}$$
+
+También se puede definir un $R_0$ para cada cepa
+
+* Para la cepa 1:
+
+$$R_0^1 = \frac{\beta_1}{\gamma_1 + (\mu + \delta_1)}$$
+
+* Para la cepa 2:
+
+$$R_0^2 = \frac{\beta_2}{\gamma_2 + (\mu + \delta_2)}$$
+
+Esencialmente, al calcular los valores de $R_0$ vamos a obtener tres posibles resultados:
+
+- Que el $R_0^1 > R_0^2$
+- Que el $R_0^1 = R_0^2$
+- Que el $R_0^1 < R_0^2$
+
+### Evolución competitiva de la virulencia. 
+
+Cuando hay distintas cepas que compiten por un mismo recurso limitante, en este caso el hospedero, se da el fenómeno de exclusión competitiva. Lo que determina que una de las cepas excluya a la otra, es el valor de $R_0$. Aquella cepa que tenga el valor de $R_0$ grande, va a excluir a la otra y va a dominar. Esto se observa con la variante delta de SARS-Cov-2. 
+
+Que el sistema se colapse hacia alguna de las dos cepas dependen del valor del $R_0$, cuando se tiene un recurso limitante idéntico.
+
+### Incrementar el valor de $R_0$
+
+Hay dos formas en las que el valor del $R_0$ se puede incrementar, en términos de los parámetros. 
+
+1. Hacer muy grande el numerador. 
+\
+Es decir, que, para este caso, $\beta_1 > \gamma_1 + (\mu + \delta_1)$. Es decir, si el denominador se queda fijo y el numerador aumenta. Significaría que la tasa de infección aumenta, y por ende el $R_0$. 
+2. Hacer muy pequeño el denominador. 
+\
+Para este mismo caso, si $\beta_1 < \gamma_1 + (\mu + \delta_1)$. Es decir, se el numerador se queda fijo, y el denominador disminuye, Significaría que disminuyen, la tasa de recuperación mas la tasa de mortalidad asociada a la infección. 
+
+Para que haya exclusión competitiva de dos cepas, tienen que aumentar su $R_0$, y para esto, hay dos caminos, que aumente la tasa de infección o que reduzca la tasa de recuperació o de mortalidad.
+
+## Resolverlo numéricamente
+
+```{r}
+library(deSolve)
+
+two_cepas <- function (t, state, parameters){
+  with(as.list(c(state, parameters)), {
+    
+    N <- S + I1 + I2 + R
+    dS <- nu*N - beta1*S*I1 - beta2*S*I2 - mu*S
+    dI1 <- beta1*S*I1 - gamma1*I1 - (mu+delta1)*I1
+    dI2 <- beta2*S*I2 - gamma2*I2 - (mu+delta2)*I2
+    dR <- gamma1*I1 + gamma2*I2 - mu*R
+    
+    list(c(dS, dI1, dI2, dR))
+    
+  })
+}
+
+parameters <- c(nu=0.1, beta1=0.9, beta2=1.1, mu=0.1, gamma1=0.1,
+                gamma2=0.7, delta1=0.101, delta2=0.105)
+state <- c(S= 998, I1= 1, I2=1, R=0)
+t <- seq(0,0.1,0.001)
+
+out <- ode(state, t, two_cepas, parameters)
+
+matplot(out[,1], out[,2:5], type ="l", xlab = "tiempo", ylab = "Población", main = "Modelo dos cepas a 0.1 años", lwd = 2, lty = 1)
+legend("topright", c("Suceptible", "Infectado cepa 1", "Infectado cepa 2", "Recuperado"), col = 1:5, lty = 1, cex = 0.5)
+
+parameters <- c(nu=0.1, beta1=0.9, beta2=1.1, mu=0.1, gamma1=0.1,
+                gamma2=0.7, delta1=0.101, delta2=0.105)
+state <- c(S= 998, I1= 1, I2=1, R=0)
+t <- seq(0,100,0.001)
+
+out <- ode(state, t, two_cepas, parameters)
+
+matplot(out[,1], out[,2:5], type ="l", xlab = "tiempo", ylab = "Población", main = "Modelo dos cepas a 100 años", lwd = 2, lty = 1)
+legend("topright", c("Suceptible", "Infectado cepa 1", "Infectado cepa 2", "Recuperado"), col = 1:5, lty = 1, cex = 0.5)
+
+```
+
+# Modelo de distintos patógenos que comparten un host
+
+## Supuestos
+
+Para este modelo se considera:
+
+- Un modelo SIR
+- Un modelo con una enfermedad infecciosa que se transmite dentro de dos diferentes especies
+- Hay dos posibles host
+- Hay dos posibles patógenos
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
