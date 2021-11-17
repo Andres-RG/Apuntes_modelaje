@@ -653,7 +653,7 @@ inf_vectores <- function (t, x, params){
 }
 
 #Tiempo 
-times <- seq(0, 10 , by = 0.001)
+times <- seq(0, 1 , by = 0.00001)
 
 #Especificar parametros 
 
@@ -696,7 +696,9 @@ legend("topright", c("Huamno suceptible"  ,
        col = 1:5, lty = 1, cex = 0.5)
 ```
 
+# Modelo del Zika
 
+Se toma el script de los datos de Zika
 
 
 
