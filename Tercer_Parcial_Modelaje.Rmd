@@ -45,7 +45,7 @@ Escencialmente, es una bifurcación dependiente del $R_t$, cambiando los paráme
 
 Basado en el modelo **SIS** sin demografía
 
-![Modelo SIS](graficas/cap_19.png)
+![Modelo SIS](cap_19.png)
 
 Se asume que la fración de la población total es 1 y la población se conserva. Los suceptibles varian con respecto al tiempo, los infectados varían con respecto al tiempo, pero la suma se conserva. Son los mismos individuos.
 
@@ -80,7 +80,7 @@ Esta exponencial puede tener tres comportamientos, dependiendo del valor de los 
 + **Constante** Si la constante de la exponencial es igual a 0, es decir, si $\beta - \gamma = 0$, es decir, si la tasa de infección es igual a la tasa de recuperación, el número de personas infectadas no cambia.(Naranja)
 + **Decrecimiento exponencial** Si la constante de la exponencial es negativa, es decir, si $\beta - \gamma < 1$, es decir, si la tasa de infección es menor a la tasa de recuperación, se reduce el número de personas infectadas. (Morado)
 
-![Exponencial](graficas/cap_20.png)
+![Exponencial](cap_20.png)
 
 La condición: 
 $$\begin{array}{l}
@@ -101,7 +101,7 @@ Esta es la justificaicón por la cual, las epidemias al inicio, se comportan de 
 
 Una vez con los datos, al incio, se observaría, dado un número de infectados y antes de que se tomen medidas de control, se tendría que observar un crecimiento exponecial. 
 
-![Exponencial](graficas/cap_21.png)
+![Exponencial](cap_21.png)
 
 Los datos, los casos, deberían ajustarse más o menos, a una forma exponencial, $I(t) = I_0 e^{(\beta - \gamma) t}$. Una vez se toman medidas de control o con inmunidad adquirida, el número de infectados deja de ser exponencial, llega a un pico y luego disminuye. Pero al inicio es donde se puede estimar el $R_0$. 
 
@@ -283,7 +283,7 @@ Para este modelo se considera:
 
 ## Esquema de compartimentos
 
-![Diagrama](graficas/cap_22.png)
+![Diagrama](cap_22.png)
 
 ## Ecuaciones 
 
@@ -375,7 +375,7 @@ matplot(out[,1], out[,2:5], type ="l", xlab = "tiempo", ylab = "Población", mai
 legend("topright", c("Suceptible", "Infectado cepa 1", "Infectado cepa 2", "Recuperado"), col = 1:5, lty = 1, cex = 0.5)
 
 parameters <- c(nu=0.1, beta1=0.9, beta2=1.1, mu=0.1, gamma1=0.1,
-                gamma2=0.7, delta1=0.101, delta2=0.105)
+                gamma2=0.7, delta1=0.01, delta2=0.05)
 state <- c(S= 998, I1= 1, I2=1, R=0)
 t <- seq(0,100,0.001)
 
@@ -397,10 +397,160 @@ Para este modelo se considera:
 - Hay dos posibles host
 - Hay dos posibles patógenos
 
+Es un modelo SIR con un hospedero que es compartido. Solo es un patógeno que puede infectar a dos posibles hospederos.
+
+## Diagrama por compartimentos
+
+![Diagrama](cap_23.png)
+
+## Ecuaciones
+
+$$\begin{array}{l}
+\dot S_1 = \nu_1 - \beta_{11}S_1I_1 - \beta_{12}S_1I_2 - \mu_1S_1 \\
+\dot I_1 = \beta_{11}S_1I_1 + \beta_{12}S_1I_2 - (\mu_1+\delta_1)I_1 - \gamma_1I_1 \\ 
+\dot R_1 = \gamma_1I_1 - \mu_1R_1 \\
+\\
+\dot S_2 = \nu_2 - \beta_{22}S_2I_2 - \beta_{21}S_2I_1 - \mu_2S_2 \\
+\dot I_2 = \beta_{22}S_2I_2 + \beta_{21}S_2I_1 - (\mu_2+\delta_2)I_2 - \gamma_2I_2 \\
+\dot R_2 = \gamma_2I_2 - \mu_2R_2
+\end{array}$$
+
+## Parámetros
+
++ Para el host 1: 
+  - $\nu_1$ : tasa de nacimiento del host 1
+  - $\beta_{11}$ : tasa de infección por contacto de un suceptible del host 1 con un infectado del host 1
+  - $\beta_{12}$ : tasa de infección por contacto de un suceptible del host 1 con un infectado del host 2
+  - $\mu_1$ : tasa de mortalidad poblacional del host 1
+  - $\delta_1$ : tasa de mortalidad asociada a la infección en el host 1 
+  - $\gamma_1$ : tasa de recuperación del host 1 \
+  \
++ Para el host 2:
+  - $\nu_2$ : tasa de nacimiento del host 2
+  - $\beta_{22}$ : tasa de infección por contacto de un suceptible del host 2 con un infectado del host 2
+  - $\beta_{21}$ : tasa de infección por contacto de un suceptible del host 2 con un infectado del host 1
+  - $\mu_2$ : tasa de mortalidad poblacional del host 2
+  - $\delta_2$ : tasa de mortalidad asociada a la infección en el host 2 
+  - $\gamma_2$ : tasa de recuperación del host 2
+
+## Posible $R_0$
+
++ Para el host 1: \
+$$R_0^1 = \frac{\beta_{11} + \beta_{12}}{\gamma_1 + (\mu_1 + \delta_1)}$$
+
++ Para el host 1: \
+$$R_0^1 = \frac{\beta_{22} + \beta_{21}}{\gamma_2 + (\mu_2 + \delta_2)}$$
+
++ General: 
+$$R_0 = \frac{\beta_{11} + \beta_{12}}{\gamma_1 + (\mu_1 + \delta_1)} + 
+\frac{\beta_{22} + \beta_{21}}{\gamma_2 + (\mu_2 + \delta_2)}$$
+
+## Determinarlo numéricamente
+
+```{r}
+#Parametros 
+## Host1
+nu1 <- 10
+beta11 <- 0
+beta12 <- 0
+mu1 <- 0.1
+delta1 <- 0
+gamma1 <- 0.5 
+N1 <- 100000
+## Host2
+nu2 <- 1
+beta22 <- 0.9
+beta21 <- 1.2
+mu2 <- 0.2
+delta2 <- 0.09
+gamma2 <- 0.5 
+N2 <- 100000
+```
+
+```{r}
+library(deSolve)
 
 
+two_host <- function (t, x, params){
+  
+  S1 <- x[1] #Suceptibles Host 1
+  I1 <- x[2] #Infectados Host 1
+  R1 <- x[3] #Recuperados Host 1
+  
+  S2 <- x[4] #Suceptibles Hot 2
+  I2 <- x[5] #Infectados Host 2
+  R2 <- x[6] #Recuperados Host2
+  
+  
+  with(as.list(params), {
+    
+    # Host 1 
+    dS1 <- nu1*N1 - beta11*S1*I1 - beta12*S1*I2 - mu1*S1
+    dI1 <- beta11*S1*I1 + beta12*S1*I2 - (mu1+delta1)*I1 - gamma1*I1
+    dR1 <- gamma1*I1 - mu1*R1
+    
+    # Host 2 
+    dS2 <- nu2*N2 - beta22*S2*I2 - beta21*S2*I1 - mu2*S2
+    dI2 <- beta22*S2*I2 + beta21*S2*I1 - (mu2+delta2)*I2 - gamma2*I2
+    dR2 <- gamma2*I2 - mu2*R2
+    
+    dx <- c(S1, I1, R1, S2, I2, R2)
+    list(dx)
+    
+  })
+}
 
+#Tiempo 
+times <- seq(0, 20 , by = 0.001)
 
+#Especificar parametros 
+
+params <- c(
+  #Host1
+  nu1       = nu1   , 
+  beta11    = beta11,
+  beta12    = beta12,
+  mu1       = mu1   ,
+  delta1    = delta1,
+  gamma1    = gamma1, 
+  N1        = N1    ,
+  #Host2
+  nu2       = nu2   ,
+  beta22    = beta22, 
+  beta21    = beta21,
+  mu2       = mu2   ,
+  delta2    = delta2,
+  gamma2    = gamma2,
+  N2        = N2
+)
+
+#Condiciones iniciales del sistema 
+
+xstart <- c(S1 = N1 - 1 ,
+            I1 = 1      ,
+            R1 = 0      ,
+            S2 = N2 - 1 ,
+            I2 = 1      ,
+            R2 = 0)
+
+#Resolver las ecuaciones
+
+out <- as.data.frame(ode(y     = xstart   ,
+                         times = times    ,
+                         func  = two_host ,
+                         parms = params))
+
+#Graficar
+
+matplot(out[,1], out[,2:6], type ="l", xlab = "tiempo", ylab = "Población", main = "Modelo dos hospederos", lwd = 2, lty = 1)
+legend("topright", c("Suceptible host 1", 
+                     "Infectado host 1" , 
+                     "Recuperado host 1",
+                     "Suceptible host 2",
+                     "Infectado host 2" , 
+                     "Recuperado host 2"), 
+       col = 1:6, lty = 1, cex = 0.5)
+```
 
 
 
