@@ -465,9 +465,8 @@ mu2 <- 0.2
 delta2 <- 0.09
 gamma2 <- 0.5 
 N2 <- 100000
-```
 
-```{r}
+
 library(deSolve)
 
 
@@ -494,14 +493,14 @@ two_host <- function (t, x, params){
     dI2 <- beta22*S2*I2 + beta21*S2*I1 - (mu2+delta2)*I2 - gamma2*I2
     dR2 <- gamma2*I2 - mu2*R2
     
-    dx <- c(S1, I1, R1, S2, I2, R2)
+    dx <- c(dS1, dI1, dR1, dS2, dI2, dR2)
     list(dx)
     
   })
 }
 
 #Tiempo 
-times <- seq(0, 20 , by = 0.001)
+times <- seq(0, 10 , by = 0.001)
 
 #Especificar parametros 
 
@@ -552,6 +551,150 @@ legend("topright", c("Suceptible host 1",
        col = 1:6, lty = 1, cex = 0.5)
 ```
 
+# Modelo de transimisión por vectores
+
+## Supuestos
+
+- No hay transmisión entre humanos o vectores
+- Consideramos a los mosquitos como vectores
+- Modelo SI para los vectores. Una razón puede ser por su tiempo de vida, es muy corto. No pueden recuperarse. 
+- Modelo SIR para humanos
+- Se considera el modelo de malaria
+
+**Supuestos agregados por mi**
+
+- La $\beta_{hm} > \beta_{mh}$
+- Las $\mu_h < \mu_m$
+- La $\nu_h < \nu_m$
+- Hay una tasa de mortalidad asociada a la infección. Los mosquitos no porque por su tiempo de vida, no es significativo a la infección. 
+- La tasa de nacimientos aumenta el número de suceptbiles, por ende, modifica el $R_0$
+
+## Diagrama por compartimentos
+
+![Diagrama](cap_24.png)
+
+## Ecuaciones
+
+$$\begin{array}{l}
+\dot S_h = \nu_h - \beta_{hm}S_hI_m - \mu_hS_h \\
+\dot I_h = \beta_{hm}S_hI_m - \gamma_hI_h - (\mu_h+\delta_h)I_h \\
+\dot R_h = \gamma_hI_h - \mu_hR_h \\
+\\
+\dot S_m = \nu_m - \beta_{mh}S_mI_h - \mu_mS_m \\
+\dot I_m = \beta_{mh}S_mI_h - \mu_mI_m
+\end{array}$$
+
+## Parámetros
+
+- $\nu_h$ : tasa de nacimientos de humanos
+- $\beta_{hm}$ : tasa de infección por la picadura de un mosquito infectado a un humano suceptible
+- $\mu_h$ : tasa de mortalidad poblacional de los humanos
+- $\delta_h$ : tasa de mortalidad asociada a la infección en humanos
+- $\gamma_h$ : tasa de recuperación de humanos
+- $\nu_m$ : tasa de nacimientos de mosquitos
+- $\beta_{mh}$ : tasa de infección por la picadura de un mosquito suceptible a un humano infectado
+- $\mu_m$ : tasa de mortalidad de los mosquitos
+
+## Posible $R_0$
+
++ $R_0$ de los humanos: \
+$$R_0^h = \frac{\nu_h \beta_{hm} }{\gamma_h + (\mu_h + \delta_h)}$$
+
++ $R_0$ de los mosquitos: \
+$$R_0^m = \frac{\nu_m \beta_{mh}}{\mu_m}$$
+
++ $R_0$ general del sistema: \
+$$R_0 = \frac{\nu_h \beta_{hm} }{\gamma_h + (\mu_h + \delta_h)} +
+\frac{\nu_m \beta_{mh}}{\mu_m}$$
+
+## Resolverlo numéricamente
+
+
+```{r}
+#Parametros 
+nuh <- 0.1 
+betahm <- 1.1
+muh <- 0.1
+deltah <- 0.005
+gammah <- 0.85
+Nh <- 1000
+num <- 0.8
+betamh <- 0.9
+mum <- 0.5
+Nm <- 1000
+
+
+library(deSolve)
+
+
+inf_vectores <- function (t, x, params){
+  
+  Sh <- x[1] #Suceptibles humanos
+  Ih <- x[2] #Infectados humanos
+  Rh <- x[3] #Recuperados humanos
+  
+  Sm <- x[4] #Suceptibles mosquitos
+  Im <- x[5] #Infectados mosquitos
+  
+  
+  with(as.list(params), {
+    
+    dSh <- nuh*Nh - betahm*Sh*Im - muh*Sh
+    dIh <- betahm*Sh*Im - gammah*Ih - (muh+deltah)*Ih
+    dRh <- gammah*Ih - muh*Rh
+    
+    dSm <- num*Nm - betamh*Sm*Ih - mum*Sm
+    dIm <- betamh*Sm*Ih - mum*Im
+    
+    dx <- c(dSh, dIh, dRh, dSm, dIm)
+    list(dx)
+    
+  })
+}
+
+#Tiempo 
+times <- seq(0, 10 , by = 0.001)
+
+#Especificar parametros 
+
+params <- c(
+  nuh    = nuh   ,
+  betahm = betahm,
+  muh    = muh   ,
+  deltah = deltah,
+  gammah = gammah,
+  Nh     = Nh    ,
+  num    = num   ,
+  betamh = betamh,
+  mum    = mum   ,
+  Nm     = Nm
+)
+
+#Condiciones iniciales del sistema 
+
+xstart <- c(Sh = Nh - 1 ,
+            Ih = 1      ,
+            Rh = 0      ,
+            Sm = Nm - 1 ,
+            Im = 1      )
+
+#Resolver las ecuaciones
+
+out <- as.data.frame(ode(y     = xstart       ,
+                         times = times        ,
+                         func  = inf_vectores ,
+                         parms = params))
+
+#Graficar
+
+matplot(out[,1], out[,2:5], type ="l", xlab = "tiempo", ylab = "Población", main = "Modelo con vectores", lwd = 2, lty = 1)
+legend("topright", c("Huamno suceptible"  , 
+                     "Humano infectado"   , 
+                     "Humano recuperado"  ,
+                     "Mosquito suceptible",
+                     "Mosquito infectado"), 
+       col = 1:5, lty = 1, cex = 0.5)
+```
 
 
 
