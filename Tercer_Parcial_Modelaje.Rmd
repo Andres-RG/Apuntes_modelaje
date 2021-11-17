@@ -45,7 +45,7 @@ Escencialmente, es una bifurcación dependiente del $R_t$, cambiando los paráme
 
 Basado en el modelo **SIS** sin demografía
 
-![Modelo SIS](cap_19.png)
+![Modelo SIS](graficas/cap_19.png)
 
 Se asume que la fración de la población total es 1 y la población se conserva. Los suceptibles varian con respecto al tiempo, los infectados varían con respecto al tiempo, pero la suma se conserva. Son los mismos individuos.
 
@@ -80,7 +80,7 @@ Esta exponencial puede tener tres comportamientos, dependiendo del valor de los 
 + **Constante** Si la constante de la exponencial es igual a 0, es decir, si $\beta - \gamma = 0$, es decir, si la tasa de infección es igual a la tasa de recuperación, el número de personas infectadas no cambia.(Naranja)
 + **Decrecimiento exponencial** Si la constante de la exponencial es negativa, es decir, si $\beta - \gamma < 1$, es decir, si la tasa de infección es menor a la tasa de recuperación, se reduce el número de personas infectadas. (Morado)
 
-![Exponencial](cap_20.png)
+![Exponencial](graficas/cap_20.png)
 
 La condición: 
 $$\begin{array}{l}
@@ -101,7 +101,7 @@ Esta es la justificaicón por la cual, las epidemias al inicio, se comportan de 
 
 Una vez con los datos, al incio, se observaría, dado un número de infectados y antes de que se tomen medidas de control, se tendría que observar un crecimiento exponecial. 
 
-![Exponencial](cap_21.png)
+![Exponencial](graficas/cap_21.png)
 
 Los datos, los casos, deberían ajustarse más o menos, a una forma exponencial, $I(t) = I_0 e^{(\beta - \gamma) t}$. Una vez se toman medidas de control o con inmunidad adquirida, el número de infectados deja de ser exponencial, llega a un pico y luego disminuye. Pero al inicio es donde se puede estimar el $R_0$. 
 
@@ -283,7 +283,7 @@ Para este modelo se considera:
 
 ## Esquema de compartimentos
 
-![Diagrama](cap_22.png)
+![Diagrama](graficas/cap_22.png)
 
 ## Ecuaciones 
 
@@ -401,7 +401,7 @@ Es un modelo SIR con un hospedero que es compartido. Solo es un patógeno que pu
 
 ## Diagrama por compartimentos
 
-![Diagrama](cap_23.png)
+![Diagrama](graficas/cap_23.png)
 
 ## Ecuaciones
 
@@ -571,7 +571,7 @@ legend("topright", c("Suceptible host 1",
 
 ## Diagrama por compartimentos
 
-![Diagrama](cap_24.png)
+![Diagrama](graficas/cap_24.png)
 
 ## Ecuaciones
 
